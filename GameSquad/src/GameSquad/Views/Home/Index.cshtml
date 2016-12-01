@@ -1,0 +1,185 @@
+<html xmlns="http://www.w3.org/1999/xhtml" ng-app="GameSquad">
+<head>
+    <title>GameSquad</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    @*<link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="~/lib/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet" />*@
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <!--  theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.6/cyborg/bootstrap.min.css">
+    <base href="/" />
+    <!---google Fonts-->
+    <link href="https://fonts.googleapis.com/css?family=Audiowide|Orbitron" rel="stylesheet">
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="~/css/chat.css" rel="stylesheet" />
+</head>
+<body ng-controller="AccountController as account">
+    <!----FB script-->
+    <div id="fb-root"></div>
+    <script>
+        (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s); js.id = id;
+            js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.8";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));</script>
+    <!-- NAv Bar -->
+    <nav class="navbar navbar-default">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navLinks">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/" type="image" src="\assets\devUp.png">GAME<strong> SQUAD</strong></a>
+        </div><!--class="active"-->
+        <div id="navLinks" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a ng-show="account.isLoggedIn()" href="/updates">Player <strong> Feed</strong></a></li>
+                <li><a ng-show="account.isLoggedIn()" href="/team">Find<strong> Teams</strong></a></li>
+                <li><a ng-show="account.isLoggedIn()" href="/findUsers">Find <strong> Players</strong></a></li>
+                <li><a ng-show="account.isLoggedIn()" ng-click="account.statusModal()" href="">My <strong>Status</strong></a></li>
+                <li><a style="font-size:1.5em; font-family:Audiowide;" class="glyphicon glyphicon-envelope" ng-show="account.isLoggedIn()" href="/inbox" ng-click="account.notificationCount = 0"><span ng-show="account.notificationCount > 0"><strong> {{account.notificationCount}}</strong> </span></a></li>
+                <li><a href="/register" ng-show="!account.isLoggedIn()">Sign<strong>Up</strong></a></li>
+                <li><a href="" ng-click="account.loginModal()" ng-show="!account.isLoggedIn()">Sign<strong>In</strong></a> </li>
+            </ul>
+            <ul ng-show="account.isLoggedIn()" style=" cursor:pointer" class="nav navbar-nav navbar-right dropdown-open">
+                <li>
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
+                        <span class="glyphicon glyphicon-user"></span>
+                        <strong style="text-transform:capitalize;">{{account.getUserName()}}</strong><strong class="caret"></strong>
+                    </a>
+
+                    <ul style="text-align:right;" class="dropdown-menu">
+                        <li><a ng-show="account.isLoggedIn()" href="/dashboard"><strong>Dashboard</strong></a></li>
+                        <li><a ng-show="account.isLoggedIn()" href="/friends"><strong>Friends</strong></a></li>
+                        <li><a ng-show="account.isLoggedIn()" href="/myTeam">My <strong>Team</strong></a></li>
+                        <li><a href="#" ng-show="account.isLoggedIn()" ng-click="account.logout()">SignOut</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div style="margin-bottom:50px"><ui-view></ui-view></div>
+    <!--SignalR -->
+    <div class="chat-section" ng-controller="ChatController as chat" ng-show="!chat.dupUser">
+        <div class="panel panel-warning">
+            <div class="panel-heading" role="button" data-toggle="collapse" data-target="#collapse1" ng-click="chat.setPanelAlert()">
+                <h3 class="panel-title">
+                    <button ng-click="$event.stopPropagation(); chat.mobileView = 'conversations'" class="btn btn-default btn-sm visible-xs-inline" ng-show="chat.mobileView === 'chat'">Back</button>
+                    Chat - {{chat.conversationName}}
+                    <span ng-show="chat.newMessagePanelAlert" class="label label-success">New Messages!</span>
+                    <span ng-show="chat.newGroupMessagePanelAlert" class="label label-info">New Group Messages!</span>
+                </h3>
+            </div>
+            <div id="collapse1" class="panel-collapse collapse">
+                <div class="panel-body chat-panel-body" >
+                    <!--Friends/userlist-->
+
+                    <div class="user-list chat-scrollbar" ng-class="{'hidden-xs' : chat.mobileView === 'chat', 'user-list-mobile' : chat.mobileView === 'conversations'}">
+                        <div class="chat-item-container ">
+                            <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                                <div class="panel panel-default" ng-click="chat.setGlobalToMessage()" ng-class="{'panel-warning': chat.conversationName === 'Global Chat'}">
+                                    <div class="panel-heading" role="tab" id="headingOne">
+                                        <h4 class="panel-title">
+                                            Global Chat
+                                        </h4>
+                                    </div>
+                                </div>
+                                <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab" id="headingOne" data-toggle="collapse" data-parent="#accordion" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                        <h4 class="panel-title">
+                                            Friends
+                                        </h4>
+                                    </div>
+                                    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                                        <div class="panel-body userlist-panel-body">
+                                            <ul class="list-group">
+                                                <li class="list-group-item "
+                                                    ng-click="chat.setUserToMessage(user)"
+                                                    ng-repeat="user in chat.privateMessageArray"
+                                                    ng-class="chat.conversationListClass(user.username, 'private')">
+
+                                                    <div class="userlist-user" > <span ng-class="{'online-status': user.online, 'offline-status': !user.online}">&#x25cf; </span>{{user.username}}</div>
+
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel panel-default">
+                                    <div class="panel-heading collapsed" role="tab" id="headingTwo" data-toggle="collapse" data-parent="#accordion" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                        <h4 class="panel-title">
+                                            Teams
+                                        </h4>
+                                    </div>
+                                    <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+                                        <div class="panel-body userlist-panel-body">
+                                            <ul class="list-group">
+                                                <li class="list-group-item userlist-user"
+                                                    ng-click="chat.setTeamToMesssage(team.teamName)"
+                                                    ng-repeat="team in chat.teamList"
+                                                    ng-class="chat.conversationListClass(team.teamName, 'group')" >
+                                                    <div class="userlist-user">{{team.teamName}}</div>
+                                                    
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--Chat Section-->
+                    <div  class="chat-message-over" ng-class="{'hidden-xs' : chat.mobileView === 'conversations', 'chat-message-over-mobile' : chat.mobileView === 'chat'}">
+                        <div class="chat-message-section chat-scrollbar" schroll-bottom="chat.messagesDispalyed">
+                            <div class="chat-item-container" >
+                                <div ng-show="chat.conversationName" class="list-group-item list-group-item-warning convo-start" style="margin-bottom: 10px;">This is the start of your conversation with <u>{{chat.conversationName}}</u>!</div>
+                                <div class="chat-item" ng-repeat="msg in chat.messagesDispalyed" ng-class="{'chat-item-self': chat.getUserName() === msg.username}">
+                                    <p>{{msg.message}}</p>
+                                    <div>{{msg.username}} at {{msg.time}}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-footer" style="height:100px;">
+                            <form ng-submit="chat.sendMessage()" class="form-inline">
+                                <div class="form-group chat-input" style="width:100%;">
+                                    <input ng-model="chat.newMessage" class="form-control chat-input" style="max-width: 1000px; width:80%" type="text" ng-disabled="!chat.userOnlineCheck" required />
+                                    <button class="btn btn-primary" type="submit"><span class="glyphicon glyphicon-send" aria-hidden="true" ng-disabled="!chat.userOnlineCheck"></span> Send</button>
+                                    <p class="text-danger" style="font-size:small" ng-show="!chat.userOnlineCheck">User is offline</p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Library Files -->
+    <script src="~/lib/angular/angular.min.js"></script>
+    <script src="~/lib/angular-resource/angular-resource.js"></script>
+    <script src="~/lib/angular-animate/angular-animate.min.js"></script>
+    <script src="~/lib/angular-touch/angular-touch.js"></script>
+    <script src="~/lib/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+    <script src="~/lib/angular-ui-router/release/angular-ui-router.min.js"></script>
+    <script type="text/javascript" src="//api.filepicker.io/v2/filepicker.js"></script>
+    <script src="~/lib/angular-filepicker/dist/angular_filepicker.js"></script>
+   
+    <!--JS files-->
+    <script src="~/out.js"></script>
+    <!----link-->
+    @*<script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>*@
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <!-- SignalR files -->
+    <script src="~/lib/signalr/jquery.signalR.min.js"></script>
+    <script src="signalr/hubs"></script>
+    @*<script src="~/lib/angularjs-scroll-glue/src/scrollglue.js"></script>*@
+</body>
+</html>

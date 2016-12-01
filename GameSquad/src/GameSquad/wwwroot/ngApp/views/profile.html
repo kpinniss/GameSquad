@@ -1,0 +1,49 @@
+﻿<div  class="col-lg-8 col-lg-offset-2">
+    <img id="dashboardBannerImg" class="img-responsive" width="600" src="/images/playerProfileBanner.png" />
+</div>
+
+<div id="profileHead" class="col-lg-8 col-lg-offset-2">
+    <a href="/findUsers">Back to Players</a>
+    <br />
+    <img id="profileImg"  style="margin-bottom:25px;" ng-src="{{controller.user.profileImage}}" class="img-responsive" />
+    <h1 style="display:inline ; text-transform:capitalize;">{{controller.user.userName}}</h1>
+</div>
+
+<div class="col-lg-8 col-lg-offset-2">
+    <div id="bioContainer" class="img-rounded">
+        <div class="innerBioContainer shadowDark img-rounded">
+            <ul id="innerText" class="list-unstyled ">
+                <li style="margin-bottom:10px;"><b>Bio:</b> {{controller.user.bio}}</li>
+                <li><b>Location:</b> {{controller.user.location}}</li>
+                <li><b>Play Platform:</b> {{controller.user.platform}}</li>
+                <li><b>Play-Style:</b> {{controller.user.playStyle}}</li>
+                <li><b>Rank:</b> {{controller.user.rank}}</li>
+            </ul>
+        </div>
+  </div>
+    <br />
+        <div class="img-rounded" id="dashBoardPost">
+            <div id="postBlock">
+                <h1><strong>Posts</strong></h1>
+                <!--<h1></h1><a class="glyphicon glyphicon-comment" style="font-size:1.5em; margin:30px; color:orange;" href="/postCreate"></a>-->
+                <br />
+                <div ng-repeat="post in controller.user.posts" class="list-group">
+                    <ul href="#" class="list-group ">
+                        <li class="shadowDark img-rounded" style="background-color:darkgray; padding:3px;">
+                            <h3 id="postUserText"><b style="text-transform:capitalize;">{{post.user}}</b></h3>
+                        </li>
+                        <li id="innerText">{{post.comment}}</li>
+                        <li ng-show="post.item">
+                            <img id="postImage" width="650" class="shadow img-responsive " ng-src="{{post.item}}" />
+                        </li>
+                        
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+

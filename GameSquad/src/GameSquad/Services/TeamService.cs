@@ -1,0 +1,152 @@
+﻿using GameSquad.Hubs;
+using GameSquad.Models;
+using GameSquad.Repositories;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace GameSquad.Services
+{
+    public class TeamService : ITeamService
+    {
+        private IHubContext _hubManager;
+        private IGenericRepository _repo;
+        public TeamService(IGenericRepository repo)
+        {
+            _repo = repo;
+            _hubManager = Startup.ConnectionManager.GetHubContext<ChatHub>();
+        }
+
+        //get team info by id
+        public object getTeamInfo(int id)
+        {
+            var _data = _repo.Query<Team>().Where(t => t.Id == id).Select(t => new
+            {
+                Id = t.Id,
+                TeamName = t.TeamName,
+                PlayStyle = t.PlayStyle,
+                TeamLeader = t.TeamLeader,
+                TeamMembers = t.TeamMembers.Select(tm => tm.ApplicationUser).Select(u => new
+                {
+                    Id = u.Id,
+                    UserName = u.UserName,
+                    Rank = u.Rank,
+                    IsOnline = u.IsOnline
+                }).ToList()
+            }).FirstOrDefault();
+            return _data;
+        }
+
+        public int SaveTeam(Team team)
+        {
+
+            if (team.Id == 0)
+            {
+                _repo.Add(team);
+                return team.Id;
+            }
+
+            else
+            {
+                var ttu = _repo.Query<Team>().Where(t => t.Id == team.Id).FirstOrDefault();
+                ttu.PlayStyle = team.PlayStyle;
+                ttu.TeamName = team.TeamName;
+                _repo.SaveChanges();
+                return 0;
+            }
+
+        }
+        //get all teams
+        public List<Team> getTeams()
+        {
+            var data = _repo.Query<Team>().Include(m => m.TeamMembers).ToList();
+            return data;
+        }
+        //data table paging
+        public List<dynamic> GetTableData(TSearch _data)
+        {
+            List<dynamic> data = new List<dynamic>();
+            var id = _data.PageCount;
+            string nFilter = _data.NameFilter ?? "";
+            string tFilter = _data.TypeFilter ?? "";
+            string lFilter = _data.LeaderFilter ?? "";
+            data.Add(_repo.Query<Team>().Where(t => t.TeamName.Contains(nFilter) && t.PlayStyle.Contains(tFilter) && t.TeamLeader.Contains(lFilter)).Skip(5 * id).Take(5).Select(t => new
+            {
+                Id = t.Id,
+                TeamName = t.TeamName,
+                PlayStyle = t.PlayStyle,
+                TeamLeader = t.TeamLeader,
+                TeamMembers = t.TeamMembers     //_repo.Query<TeamMembers>().Where(m => m.TeamId == t.Id).ToList()
+            }).ToList());
+            return data;
+        }
+        //get users assoc w/ team byid
+        public List<ApplicationUser> UsersByTeam(int teamId)
+        {
+            var users = _repo.Query<TeamMembers>().Where(tm => tm.TeamId == teamId).Select(tm => tm.ApplicationUser).ToList();
+            return users;
+        }
+        // get teams by userid
+        public List<Team> TeamsByUser(string userId)
+        {
+            var teams = _repo.Query<TeamMembers>().Where(tm => tm.ApplicationUserId == userId).Select(tm => tm.Team).ToList();
+            return teams;
+        }
+        //add a team memeber to team by id
+        public void AddMemberToTeam( string userId, int teamId)
+        {
+            var user = _repo.Query<ApplicationUser>().FirstOrDefault(c => c.Id == userId);
+            var team = _repo.Query<Team>().FirstOrDefault(t => t.Id == teamId);
+
+            var join = new TeamMembers {
+                TeamId = teamId,
+                Team = team,
+                ApplicationUserId = userId,
+                ApplicationUser = user
+
+
+            };
+
+            _repo.Add(join);
+            _repo.SaveChanges();
+
+            //Signalr Stuff for insta add new group to chag
+            _hubManager.Clients.User(user.UserName).joinNewGroup(team.TeamName);
+          
+
+
+
+        }
+        //remove a team memeber from team by id
+        public void RemoveMember(string userId, int teamId)
+        {
+            var user = _repo.Query<ApplicationUser>().FirstOrDefault(m => m.Id == userId);
+            var team = _repo.Query<Team>().FirstOrDefault(c => c.Id == teamId);
+            var remove = new TeamMembers
+            {
+                TeamId = teamId,
+                Team = team,
+                ApplicationUserId = userId,
+                ApplicationUser = user
+
+            };
+
+
+            _repo.Delete(remove);
+            _repo.SaveChanges();
+
+            //Signalr stuff for insta remove group in chat
+            _hubManager.Clients.User(user.UserName).leaveGroup(team.TeamName);
+
+        }
+        //remove team 
+        public void DeleteTeam(int id)
+        {
+            var ttd = _repo.Query<Team>().Where(t => t.Id == id).FirstOrDefault();
+            _repo.Delete(ttd);
+        }
+    }
+}

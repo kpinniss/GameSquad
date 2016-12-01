@@ -1,0 +1,24 @@
+﻿<div class="container">
+    <div class="col-lg-8 col-lg-offset-2"><img id="friendsBanner" class="img-responsive" src="../../images/friendsBanner.png" /></div>
+    <br />
+        <div id="friendsContainer" class="col-lg-8 col-lg-offset-2 img-rounded">
+            <div id="friendsTableContainer"class="img-rounded shadowDark">
+                <h2><b>Friends List</b></h2>
+                <table class="table table-hover table-striped ">
+                    <thead class="img-rounded">
+                        <tr class="img-rounded">
+                            <th>UserName</th>
+                            <th>Rank</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tr class="img-rounded" ng-repeat="friend in controller.friends">
+                        <td class="img-rounded"><a href="/profile/{{friend.id}}">{{friend.username}}</a></td>
+                        <td>{{friend.rank}}</td>
+                        <td class="img-rounded"><button ng-click="controller.removeFriend(friend.id)" class="btn btn-warning btn-sm">Remove </button></td>
+                        <td><button class="btn btn-primary btn-sm" ng-click="controller.showMessageModal(friend.id)">Message</button></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+</div>
